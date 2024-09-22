@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Install MicroShift
+        run: |
+          #hostnamectl set-hostname ubuntu.example.com
+          #git clone https://github.com/thinkahead/microshift.git microshift
+          #cd microshift
+          #./install-ubuntu22.04.sh
+          #sudo systemctl stop crio
+          #sudo systemctl disable crio
+          #sudo setsebool -P container_manage_cgroup true 
+          podman volume rm microshift-data || true
+          podman volume create microshift-data
+          sudo mkdir -p /var/hpvolumes
+          #podman run -d --rm --name microshift -h microshift.example.com --privileged -v /lib/modules:/lib/modules -v microshift-data:/var/lib -v /var/hpvolumes:/var/hpvolumes -p 6443:6443 -p 8080:8080 -p 80:80 quay.io/microshift/microshift-aio:4.8.0-0.microshift-2022-04-20-182108-linux-nft-arm64
+          sudo podman run -d --rm --name microshift -h microshift.example.com --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /lib/modules:/lib/modules -v microshift-data:/var/lib -v /var/hpvolumes:/var/hpvolumes -p 6443:6443 -p 8080:8080 -p 80:80 quay.io/microshift/microshift-aio:4.8.0-0.microshift-2022-04-20-182108-linux-nft-arm64
+          sudo podman volume inspect microshift-data
+          export KUBECONFIG=/var/lib/containers/storage/volumes/microshift-data/_data/microshift/resources/kubeadmin/kubeconfig
+          # crio on host is stopped, so we do not run crictl commands on host
+          sudo oc get pods -A
+          sudo podman exec -it microshift crictl ps -a"
